@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suplefit Juayúa - Sistema en la Nube</title>
+
+    <!-- Ícono para la pestaña del navegador -->
+    <link rel="icon" href="logo.png" type="image/png">
     
     <!-- Librerías para generar PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -14,6 +17,59 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
+
+        /* --- CÓDIGO CSS PARA RESPONSIVIDAD --- */
+
+/* Contenedor deslizante para tablas en móviles */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 15px;
+    border-radius: 4px;
+}
+
+table {
+    min-width: 600px;
+}
+
+/* Ajustes automáticos para pantallas menores a 768px (Móviles y Tablets) */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 10px;
+    }
+    
+    .navbar-buttons {
+        justify-content: center;
+    }
+    
+    .navbar button {
+        flex: 1 1 45%; /* Los botones del menú ocupan la mitad de la fila */
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    .btn-logout-nav {
+        flex: 1 1 100%; /* El botón de salir abarca toda la línea inferior */
+        margin-top: 5px;
+    }
+    
+    .vista {
+        padding: 15px 10px;
+    }
+    
+    .modulo {
+        padding: 15px;
+    }
+    
+    .flex-inputs {
+        flex-direction: column; /* Apila los inputs que estaban lado a lado */
+        gap: 0;
+    }
+}
+
+
+        
         /* --- ESTILOS GENERALES --- */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
