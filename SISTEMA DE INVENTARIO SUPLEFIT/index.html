@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suplefit Juayúa - Sistema en la Nube</title>
     
-    <!-- Ícono para la pestaña del navegador -->
-    <link rel="icon" href="logo.png" type="image/png">
-    
     <!-- Librerías para generar PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
     <!-- SDK de Firebase en la nube (Compat v10) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         /* --- ESTILOS GENERALES --- */
         body {
@@ -36,51 +35,35 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             text-align: center;
         }
-        @media (max-width: 480px) {
-            .login-container {
-                margin: 20px;
-                padding: 20px;
-            }
-        }
 
         /* --- NAVEGACIÓN --- */
         .navbar {
-            display: none; /* Se cambia a flex con JS */
+            display: none; 
             background-color: #2c3e50;
+            overflow: hidden;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             position: sticky;
             top: 0;
             z-index: 1000;
-            justify-content: center;
-            padding: 10px;
         }
-        
-        .navbar-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            justify-content: center;
-            width: 100%;
-            max-width: 1200px;
-        }
-
         .navbar button {
+            float: left;
+            display: block;
             color: white;
             text-align: center;
-            padding: 12px 15px;
+            padding: 16px 18px;
             text-decoration: none;
             border: none;
             background: none;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
             transition: background 0.3s;
-            border-radius: 4px;
         }
         .navbar button:hover { background-color: #34495e; }
         .navbar button.active { background-color: #2980b9; color: white; }
-        .btn-logout-nav { background-color: #c0392b !important; }
-        .btn-logout-nav:hover { background-color: #e74c3c !important; }
+        .navbar .btn-logout-nav { float: right; background-color: #c0392b; color: white; }
+        .navbar .btn-logout-nav:hover { background-color: #e74c3c; }
 
         /* --- VISTAS Y MÓDULOS --- */
         .vista {
@@ -92,7 +75,7 @@
         }
         .vista.activa { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-        
+
         .modulo {
             background: white;
             padding: 25px;
@@ -121,23 +104,16 @@
         .btn-info { background-color: #8e44ad; }
         .btn-gris { background-color: #7f8c8d; }
         
-        /* --- TABLAS RESPONSIVE --- */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin-top: 15px;
-            border-radius: 4px;
-        }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }
+        /* --- TABLAS --- */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #34495e; color: white; white-space: nowrap; }
+        th { background-color: #34495e; color: white; }
         
         .estado-debe { background-color: #e74c3c; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
         .estado-pagado { background-color: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
         .etiqueta-tipo { background-color: #7f8c8d; color: white; padding: 3px 6px; border-radius: 3px; font-size: 12px; }
         .buscador { border: 2px solid #3498db; background-color: #f0f8ff; font-size: 16px; padding: 12px;}
-        
+
         /* --- TARJETAS --- */
         .grid-reportes {
             display: grid;
@@ -156,41 +132,18 @@
         .tarjeta .valor { font-size: 24px; font-weight: bold; color: #2c3e50; margin: 0;}
         .valor.positivo { color: #2980b9; } 
         .valor.pendiente { color: #e74c3c; }
-        
-        .barra-filtros { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
-        .barra-filtros input, .barra-filtros select { margin-bottom: 0; flex: 1; min-width: 200px; }
-        .flex-inputs { display: flex; gap: 10px; width: 100%; }
 
-        /* --- MEDIA QUERIES (Móviles) --- */
-        @media (max-width: 768px) {
-            .navbar {
-                padding: 10px;
-            }
-            .navbar-buttons {
-                justify-content: center;
-            }
-            .navbar button {
-                flex: 1 1 45%;
-                padding: 10px;
-                font-size: 13px;
-            }
-            .btn-logout-nav {
-                flex: 1 1 100%;
-                margin-top: 5px;
-            }
-            .vista { padding: 15px 10px; }
-            .modulo { padding: 15px; }
-            .flex-inputs { flex-direction: column; gap: 0; }
-        }
+        .barra-filtros { display: flex; gap: 15px; margin-bottom: 15px; }
+        .barra-filtros input, .barra-filtros select { margin-bottom: 0; }
     </style>
 </head>
 <body>
+
     <!-- Imagen oculta para renderizar en PDF -->
     <img id="logoImgPDF" src="logo.png" style="position: absolute; left: -9999px;" alt="Logo PDF">
-    
+
     <!-- LOGIN -->
     <div id="pantallaLogin" class="login-container">
-        <img src="logo.png" alt="Logo Suplefit" style="width: 100px; height: auto; margin-bottom: 15px; border-radius: 8px;">
         <h2>🔑 Acceso al Sistema</h2>
         <p style="color: #7f8c8d; font-size: 13px;">Usuario: admin | Clave: 123</p>
         <input type="text" id="usuario" placeholder="Usuario">
@@ -198,17 +151,15 @@
         <button class="btn-accion btn-azul" onclick="iniciarSesion()">Ingresar</button>
     </div>
 
-    <!-- MENÚ DE NAVEGACIÓN RESPONSIVE -->
+    <!-- MENÚ DE NAVEGACIÓN -->
     <div id="barraNavegacion" class="navbar">
-        <div class="navbar-buttons">
-            <button class="nav-btn" onclick="cambiarPagina('paginaInicio', this)">🏠 Inicio</button>
-            <button class="nav-btn" onclick="cambiarPagina('paginaInventario', this)">📦 Inventario</button>
-            <button class="nav-btn" onclick="cambiarPagina('paginaVentas', this)">🛒 Ventas</button>
-            <button class="nav-btn" onclick="cambiarPagina('paginaCobros', this)">💰 Cobros</button>
-            <button class="nav-btn" onclick="cambiarPagina('paginaEstadoCuenta', this)">📈 Estado</button>
-            <button class="nav-btn" onclick="cambiarPagina('paginaReportes', this)">📊 Reportes</button>
-            <button class="btn-logout-nav" onclick="cerrarSesion()">Salir</button>
-        </div>
+        <button class="nav-btn" onclick="cambiarPagina('paginaInicio', this)">🏠 Inicio</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaInventario', this)">📦 Inventario</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaVentas', this)">🛒 Ventas</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaCobros', this)">💰 Cobros y Clientes</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaEstadoCuenta', this)">📈 Estado de Cuenta</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaReportes', this)">📊 Reportes</button>
+        <button class="btn-logout-nav" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
 
     <!-- PÁGINA 0: INICIO -->
@@ -229,42 +180,32 @@
             
             <label>Fecha de Ingreso:</label>
             <input type="date" id="prodFechaIngreso">
-            <label>Producto:</label>
             <input type="text" id="prodNombre" placeholder="Nombre del Producto (ej. Proteína Whey)">
             
-            <div class="flex-inputs">
-                <div style="width: 100%;">
-                    <label>Precio Compra ($):</label>
-                    <input type="number" id="prodPrecioCompra" placeholder="Ej: 30.00">
-                </div>
-                <div style="width: 100%;">
-                    <label>Precio Venta ($):</label>
-                    <input type="number" id="prodPrecioVenta" placeholder="Ej: 50.00">
-                </div>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="prodPrecioCompra" placeholder="Precio Compra ($)">
+                <input type="number" id="prodPrecioVenta" placeholder="Precio Venta ($)">
             </div>
             
-            <label>Cantidad Inicial en Stock:</label>
-            <input type="number" id="prodCantidad" placeholder="Cantidad">
+            <input type="number" id="prodCantidad" placeholder="Cantidad Inicial en Stock">
             
             <button id="btnGuardarProd" class="btn-accion btn-azul" onclick="guardarProducto()">Guardar Nuevo Producto</button>
             <button id="btnCancelarEdicion" class="btn-accion btn-gris" style="display:none; margin-top:10px;" onclick="cancelarEdicion()">Cancelar Edición</button>
-            
-            <div class="table-responsive">
-                <table id="tablaProductos">
-                    <thead>
-                        <tr>
-                            <th>Fecha Ingreso</th>
-                            <th>Producto</th>
-                            <th>Costo</th>
-                            <th>Venta</th>
-                            <th>Ganancia</th>
-                            <th>Stock Actual</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpoProductos"></tbody>
-                </table>
-            </div>
+
+            <table id="tablaProductos">
+                <thead>
+                    <tr>
+                        <th>Fecha Ingreso</th>
+                        <th>Producto</th>
+                        <th>Costo</th>
+                        <th>Venta</th>
+                        <th>Ganancia</th>
+                        <th>Stock Actual</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoProductos"></tbody>
+            </table>
         </div>
     </div>
 
@@ -275,8 +216,10 @@
             
             <label>Fecha de Venta:</label>
             <input type="date" id="ventaFecha">
+
             <label>Nombre del Cliente (Obligatorio):</label>
             <input type="text" id="clienteNombre" placeholder="Ingrese el nombre del cliente">
+
             <label>Seleccionar Producto:</label>
             <select id="ventaSeleccion"></select>
             
@@ -288,10 +231,12 @@
                 <option value="contado">Un solo pago (Al Contado)</option>
                 <option value="credito">Dejar a Crédito (Pendiente)</option>
             </select>
+
             <div id="camposCredito" style="display: none; background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 10px; border: 1px solid #ddd;">
                 <label>Datos del Crédito:</label>
                 <input type="number" id="abonoInicial" placeholder="Abono Inicial (Dejar en blanco si es 0)">
             </div>
+
             <button class="btn-accion btn-azul" onclick="procesarVenta()">Completar Venta</button>
         </div>
     </div>
@@ -302,31 +247,29 @@
             <h3>💰 Gestión de Clientes y Cobros</h3>
             
             <div class="barra-filtros">
-                <input type="text" id="buscarCliente" class="buscador" placeholder="🔍 Buscar cliente por nombre..." onkeyup="renderizarDeudas()">
-                <select id="filtroEstadoCobros" style="border: 2px solid #3498db; font-size: 16px; padding: 12px; border-radius: 4px;" onchange="renderizarDeudas()">
+                <input type="text" id="buscarCliente" class="buscador" style="flex: 2;" placeholder="🔍 Buscar cliente por nombre..." onkeyup="renderizarDeudas()">
+                <select id="filtroEstadoCobros" style="flex: 1; border: 2px solid #3498db; font-size: 16px; padding: 12px; border-radius: 4px;" onchange="renderizarDeudas()">
                     <option value="todos">Todos los Estados</option>
                     <option value="deben">Solo los que Deben</option>
                     <option value="pagados">Solo Pagados</option>
                 </select>
             </div>
             
-            <div class="table-responsive">
-                <table id="tablaDeudas">
-                    <thead>
-                        <tr>
-                            <th>Fecha Compra</th>
-                            <th>Cliente</th>
-                            <th>Concepto</th>
-                            <th>Total ($)</th>
-                            <th>Saldo ($)</th>
-                            <th>Tipo</th>
-                            <th>Estado</th>
-                            <th style="width: 150px; text-align: center;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpoDeudas"></tbody>
-                </table>
-            </div>
+            <table id="tablaDeudas">
+                <thead>
+                    <tr>
+                        <th>Fecha Compra</th>
+                        <th>Cliente</th>
+                        <th>Concepto</th>
+                        <th>Total ($)</th>
+                        <th>Saldo ($)</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th style="width: 150px; text-align: center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoDeudas"></tbody>
+            </table>
         </div>
     </div>
 
@@ -348,20 +291,19 @@
                     <p class="valor pendiente" id="repPorCobrar">$0.00</p>
                 </div>
             </div>
+
             <h4 style="margin-top: 25px; color:#2c3e50;">📋 Detalle de Clientes que Deben</h4>
-            <div class="table-responsive">
-                <table id="tablaDetalleDeudores" style="margin-top: 10px;">
-                    <thead>
-                        <tr>
-                            <th>Fecha de Compra</th>
-                            <th>Nombre del Cliente</th>
-                            <th>Producto / Concepto</th>
-                            <th>Monto que Debe ($)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpoDetalleDeudores"></tbody>
-                </table>
-            </div>
+            <table id="tablaDetalleDeudores" style="margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th>Fecha de Compra</th>
+                        <th>Nombre del Cliente</th>
+                        <th>Producto / Concepto</th>
+                        <th>Monto que Debe ($)</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoDetalleDeudores"></tbody>
+            </table>
         </div>
     </div>
 
@@ -369,19 +311,16 @@
     <div id="paginaReportes" class="vista">
         <div class="modulo">
             <h3>📅 Reporte de Ventas por Período</h3>
-            <div class="barra-filtros" style="align-items: flex-end;">
-                <div>
-                    <label>Desde:</label>
-                    <input type="date" id="fechaDesde">
-                </div>
-                <div>
-                    <label>Hasta:</label>
-                    <input type="date" id="fechaHasta">
-                </div>
-                <button class="btn-azul" style="padding: 12px; border:none; border-radius:4px; color:white; cursor:pointer;" onclick="renderizarDatosGenerales()">🔍 Filtrar Fechas</button>
-                <button class="btn-rojo-claro" style="padding: 12px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="descargarPDFReporte()">📄 Descargar PDF</button>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                <label>Desde:</label>
+                <input type="date" id="fechaDesde" style="width: auto; margin-bottom: 0;">
+                <label>Hasta:</label>
+                <input type="date" id="fechaHasta" style="width: auto; margin-bottom: 0;">
+                
+                <button class="btn-azul" style="padding: 10px; width: auto; border:none; border-radius:4px; color:white; cursor:pointer;" onclick="renderizarDatosGenerales()">🔍 Filtrar Fechas</button>
+                <button class="btn-rojo-claro" style="padding: 10px; width: auto; border:none; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="descargarPDFReporte()">📄 Descargar PDF</button>
             </div>
-            
+
             <div class="grid-reportes">
                 <div class="tarjeta" style="border-left-color: #3498db;">
                     <h4>Total Vendido (Rango)</h4>
@@ -392,23 +331,21 @@
                     <p class="valor positivo" id="repGananciaMes">$0.00</p>
                 </div>
             </div>
-            
-            <div class="table-responsive">
-                <table id="tablaVentasMes">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Cliente</th>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Total Venta</th>
-                            <th>Ganancia</th>
-                            <th>Tipo</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpoVentasMes"></tbody>
-                </table>
-            </div>
+
+            <table id="tablaVentasMes">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Total Venta</th>
+                        <th>Ganancia</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoVentasMes"></tbody>
+            </table>
         </div>
     </div>
 
@@ -422,6 +359,7 @@
             messagingSenderId: "169438827759",
             appId: "1:169438827759:web:6139f03edb8eecda25371a"
         };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -446,10 +384,12 @@
             inventario = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderizarTodo();
         });
+
         db.collection("deudas").onSnapshot(snapshot => {
             deudas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderizarTodo();
         });
+
         db.collection("ventas").onSnapshot(snapshot => {
             ventas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderizarTodo();
@@ -470,7 +410,7 @@
         function iniciarSesion() {
             if (document.getElementById('usuario').value === "admin" && document.getElementById('clave').value === "123") {
                 document.getElementById('pantallaLogin').style.display = 'none';
-                document.getElementById('barraNavegacion').style.display = 'flex';
+                document.getElementById('barraNavegacion').style.display = 'block';
                 document.getElementById('paginaInicio').classList.add('activa');
                 document.querySelectorAll('.nav-btn')[0].classList.add('active');
                 renderizarTodo();
@@ -495,6 +435,7 @@
                     venta: venta.toFixed(2),
                     cantidad
                 };
+
                 if(!idEdicion) {
                     await db.collection("inventario").add(datosProducto);
                 } else {
@@ -509,6 +450,7 @@
             idEdicion = id;
             let prod = inventario.find(p => p.id === id);
             if (!prod) return;
+
             document.getElementById('prodFechaIngreso').value = prod.fechaIngreso || ''; 
             document.getElementById('prodNombre').value = prod.nombre;
             document.getElementById('prodPrecioCompra').value = prod.compra;
@@ -555,20 +497,21 @@
             const idProd = document.getElementById('ventaSeleccion').value;
             const cantidadVenta = parseInt(document.getElementById('ventaCantidad').value);
             const tipoPago = document.getElementById('ventaTipo').value;
-            
+
             if (!fechaVenta) return alert("Seleccione la fecha de venta.");
             if (!cliente) return alert("Debe ingresar el nombre del cliente.");
             if (!idProd || isNaN(cantidadVenta) || cantidadVenta <= 0) return alert("Seleccione un producto y cantidad válida.");
             
             const producto = inventario.find(p => p.id === idProd);
             if (!producto || producto.cantidad < cantidadVenta) return alert(`Stock insuficiente.`);
+
             const totalVenta = producto.venta * cantidadVenta;
             const gananciaVenta = (producto.venta - producto.compra) * cantidadVenta;
             
             // Actualizar Stock en la Nube
             const nuevaCantidad = producto.cantidad - cantidadVenta;
             await db.collection("inventario").doc(idProd).update({ cantidad: nuevaCantidad });
-            
+
             // Registrar Venta en la Nube
             await db.collection("ventas").add({
                 fecha: fechaVenta,
@@ -579,11 +522,11 @@
                 ganancia: gananciaVenta.toFixed(2),
                 tipo: tipoPago
             });
-            
+
             let abono = 0;
             let saldo = 0;
             let historial = [];
-            
+
             if (tipoPago === 'contado') {
                 abono = totalVenta;
                 saldo = 0;
@@ -596,7 +539,7 @@
                     historial.push({ fecha: fechaVenta, monto: abono.toFixed(2), detalle: "Abono Inicial" });
                 }
             }
-            
+
             // Registrar Deuda/Cobro en la Nube
             await db.collection("deudas").add({
                 fecha: fechaVenta,
@@ -608,13 +551,13 @@
                 tipo: tipoPago,
                 historialAbonos: historial 
             });
-            
+
             document.getElementById('ventaCantidad').value = '';
             document.getElementById('clienteNombre').value = '';
             document.getElementById('abonoInicial').value = '';
             document.getElementById('ventaTipo').value = 'contado';
             alternarCamposCredito();
-            
+
             let mensajeExito = `Venta guardada con éxito en la nube. Total: $${totalVenta.toFixed(2)}`;
             if (nuevaCantidad === 0) {
                 mensajeExito += `\n\n⚠️ ADVERTENCIA: "${producto.nombre}" se ha quedado sin existencias.`;
@@ -626,11 +569,11 @@
         async function registrarAbono(id) {
             let deuda = deudas.find(d => d.id === id);
             if (!deuda || parseFloat(deuda.saldo) <= 0) return alert("Esta cuenta ya está saldada.");
-            
+
             let fechaHoy = new Date().toISOString().split('T')[0];
             let fechaAbono = prompt(`FECHA del abono (AAAA-MM-DD):`, fechaHoy);
             if(!fechaAbono) return; 
-            
+
             let abonoInput = prompt(`¿Cuánto abonará ${deuda.nombre}? (Saldo Pendiente: $${deuda.saldo})`);
             if (abonoInput !== null && abonoInput !== "") {
                 let montoAbono = parseFloat(abonoInput);
@@ -656,7 +599,7 @@
             if (!deuda) return;
             let historial = deuda.historialAbonos || [];
             if(historial.length === 0) return alert(`No hay registro de pagos para ${deuda.nombre}.`);
-            
+
             let texto = `Historial de pagos de ${deuda.nombre}:\n\n`;
             historial.forEach(pago => { texto += `📅 ${pago.fecha} | Pagó: $${pago.monto} \n`; });
             texto += `\nSaldo Pendiente: $${deuda.saldo}`;
@@ -675,11 +618,11 @@
             const selectVenta = document.getElementById('ventaSeleccion');
             tbodyProd.innerHTML = ''; 
             selectVenta.innerHTML = '<option value="">-- Seleccionar Producto --</option>';
-            
+
             inventario.forEach(prod => {
                 let ganancia = (parseFloat(prod.venta) - parseFloat(prod.compra)).toFixed(2);
                 let fechaDisplay = prod.fechaIngreso ? prod.fechaIngreso : "-"; 
-                
+
                 tbodyProd.innerHTML += `<tr>
                     <td>${fechaDisplay}</td>
                     <td><strong>${prod.nombre}</strong></td>
@@ -695,6 +638,7 @@
                 
                 if (prod.cantidad > 0) selectVenta.innerHTML += `<option value="${prod.id}">${prod.nombre} - $${prod.venta}</option>`;
             });
+
             renderizarDeudas();
             renderizarDatosGenerales();
         }
@@ -704,22 +648,23 @@
             const filtroEstado = document.getElementById('filtroEstadoCobros').value;
             const tbodyDeudas = document.getElementById('cuerpoDeudas');
             tbodyDeudas.innerHTML = '';
-            
+
             deudas.forEach(deuda => {
                 let estaPagado = parseFloat(deuda.saldo) <= 0;
+
                 let mostrarPorEstado = true;
-                
                 if (filtroEstado === 'deben' && estaPagado) mostrarPorEstado = false;
                 if (filtroEstado === 'pagados' && !estaPagado) mostrarPorEstado = false;
-                
+
                 if (deuda.nombre.toLowerCase().includes(filtroTexto) && mostrarPorEstado) {
+                    
                     let etiquetaEstado = estaPagado ? `<span class="estado-pagado" style="background-color:#3498db;">Pagado</span>` : `<span class="estado-debe">Debe</span>`;
                     let etiquetaTipo = deuda.tipo === 'credito' ? `<span class="etiqueta-tipo" style="background-color:#e67e22;">Crédito</span>` : `<span class="etiqueta-tipo" style="background-color:#2980b9;">Contado</span>`;
                     
                     let btnAbonar = estaPagado ? "" : `<button class="btn-icono btn-amarillo" title="Abonar" onclick="registrarAbono('${deuda.id}')">➕</button>`;
                     let btnHistorial = `<button class="btn-icono btn-info" title="Ver Historial" onclick="verHistorial('${deuda.id}')">📅</button>`;
                     let btnBorrar = `<button class="btn-icono btn-gris" title="Eliminar" onclick="eliminarRegistroDeuda('${deuda.id}')">🗑️</button>`;
-                    
+
                     tbodyDeudas.innerHTML += `<tr>
                         <td>${deuda.fecha || "-"}</td>
                         <td><strong>${deuda.nombre}</strong></td>
@@ -728,7 +673,7 @@
                         <td style="color:#c0392b; font-weight:bold;">$${deuda.saldo}</td>
                         <td>${etiquetaTipo}</td>
                         <td>${etiquetaEstado}</td>
-                        <td style="text-align: center; white-space: nowrap;">${btnAbonar}${btnHistorial}${btnBorrar}</td>
+                        <td style="text-align: center;">${btnAbonar}${btnHistorial}${btnBorrar}</td>
                     </tr>`;
                 }
             });
@@ -738,11 +683,11 @@
             let capitalInventario = inventario.reduce((sum, p) => sum + (parseFloat(p.compra) * p.cantidad), 0);
             let totalCuentasPorCobrar = deudas.reduce((sum, d) => sum + parseFloat(d.saldo), 0);
             let gananciaGlobalHistorica = ventas.reduce((sum, v) => sum + parseFloat(v.ganancia), 0);
-            
+
             document.getElementById('repCapital').innerText = `$${capitalInventario.toFixed(2)}`;
             document.getElementById('repPorCobrar').innerText = `$${totalCuentasPorCobrar.toFixed(2)}`;
             document.getElementById('repGananciaGlobal').innerText = `$${gananciaGlobalHistorica.toFixed(2)}`;
-            
+
             const tbodyDetalleDeudores = document.getElementById('cuerpoDetalleDeudores');
             tbodyDetalleDeudores.innerHTML = '';
             let deudoresPendientes = deudas.filter(d => parseFloat(d.saldo) > 0);
@@ -759,20 +704,22 @@
                     </tr>`;
                 });
             }
-            
+
             const fechaDesde = document.getElementById('fechaDesde').value;
             const fechaHasta = document.getElementById('fechaHasta').value;
             const tbodyVentasMes = document.getElementById('cuerpoVentasMes');
             tbodyVentasMes.innerHTML = '';
-            
+
             let totalVentasMes = 0;
             let gananciaNetaMes = 0;
-            
+
             ventas.forEach(v => {
                 if (v.fecha >= fechaDesde && v.fecha <= fechaHasta) {
                     totalVentasMes += parseFloat(v.total);
                     gananciaNetaMes += parseFloat(v.ganancia);
+
                     let etiquetaTipo = v.tipo === 'credito' ? '🟠 Crédito' : '🔵 Contado';
+
                     tbodyVentasMes.innerHTML += `<tr>
                         <td>${v.fecha}</td>
                         <td><strong>${v.cliente || "-"}</strong></td>
@@ -784,11 +731,11 @@
                     </tr>`;
                 }
             });
-            
+
             if(tbodyVentasMes.innerHTML === '') {
                 tbodyVentasMes.innerHTML = `<tr><td colspan="7" style="text-align:center;">No hay ventas registradas en este rango de fechas.</td></tr>`;
             }
-            
+
             document.getElementById('repVentasMes').innerText = `$${totalVentasMes.toFixed(2)}`;
             document.getElementById('repGananciaMes').innerText = `$${gananciaNetaMes.toFixed(2)}`;
         }
@@ -799,12 +746,14 @@
                 alert("Cargando módulo PDF, reintente en unos segundos.");
                 return;
             }
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+
             const fechaDesde = document.getElementById('fechaDesde').value;
             const fechaHasta = document.getElementById('fechaHasta').value;
+
             const logoElement = document.getElementById('logoImgPDF');
-            
             if (logoElement && logoElement.complete && logoElement.naturalWidth !== 0) {
                 try {
                     let canvas = document.createElement("canvas");
@@ -813,12 +762,13 @@
                     let ctx = canvas.getContext("2d");
                     ctx.drawImage(logoElement, 0, 0);
                     let imgBase64 = canvas.toDataURL("image/png");
+
                     doc.addImage(imgBase64, 'PNG', 14, 8, 25, 25);
                 } catch (e) {
                     console.warn("Logo omitido por restricción local de origen.");
                 }
             }
-            
+
             doc.setFontSize(18);
             doc.setTextColor(44, 62, 80); 
             doc.text("Suplefit Juayúa", 196, 20, { align: 'right' });
@@ -830,21 +780,25 @@
             doc.setTextColor(127, 140, 141);
             doc.text(`Período consultado: ${fechaDesde} al ${fechaHasta}`, 14, 44);
             doc.text(`Fecha de impresión: ${new Date().toLocaleDateString()}`, 14, 49);
-            
+
             let startY = 56;
+
             let ventasFiltradas = ventas.filter(v => v.fecha >= fechaDesde && v.fecha <= fechaHasta);
             let ventasContado = ventasFiltradas.filter(v => v.tipo === 'contado');
             let ventasCredito = ventasFiltradas.filter(v => v.tipo === 'credito');
-            
+
             // TABLA 1: CONTADO
             doc.setFontSize(12);
             doc.setTextColor(41, 128, 185); 
             doc.text("1. Ventas al Contado", 14, startY);
             startY += 5;
+
             let bodyContado = ventasContado.map(v => [
                 v.fecha, v.cliente || "-", v.producto, v.cantidad, `$${v.total}`, `$${v.ganancia}`
             ]);
+
             if (bodyContado.length === 0) bodyContado.push([{content: 'No hay ventas al contado en este período', colSpan: 6, styles: {halign: 'center'}}]);
+
             doc.autoTable({
                 startY: startY,
                 head: [['Fecha', 'Cliente', 'Producto', 'Cant.', 'Total Venta', 'Ganancia']],
@@ -853,17 +807,21 @@
                 headStyles: { fillColor: [41, 128, 185] },
                 styles: { fontSize: 9, cellPadding: 2.5 }
             });
+
             startY = doc.lastAutoTable.finalY + 12;
-            
+
             // TABLA 2: CRÉDITO
             doc.setFontSize(12);
             doc.setTextColor(230, 126, 34); 
             doc.text("2. Ventas al Crédito (Cuentas Pendientes)", 14, startY);
             startY += 5;
+
             let bodyCredito = ventasCredito.map(v => [
                 v.fecha, v.cliente || "-", v.producto, v.cantidad, `$${v.total}`, `$${v.ganancia}`
             ]);
+
             if (bodyCredito.length === 0) bodyCredito.push([{content: 'No hay ventas al crédito en este período', colSpan: 6, styles: {halign: 'center'}}]);
+
             doc.autoTable({
                 startY: startY,
                 head: [['Fecha', 'Cliente', 'Producto', 'Cant.', 'Total Venta', 'Ganancia']],
@@ -872,11 +830,12 @@
                 headStyles: { fillColor: [230, 126, 34] },
                 styles: { fontSize: 9, cellPadding: 2.5 }
             });
+
             startY = doc.lastAutoTable.finalY + 15;
             
             let totalVendido = ventasFiltradas.reduce((sum, v) => sum + parseFloat(v.total), 0);
             let gananciaTotal = ventasFiltradas.reduce((sum, v) => sum + parseFloat(v.ganancia), 0);
-            
+
             doc.setFontSize(11);
             doc.setTextColor(44, 62, 80);
             doc.text(`RESUMEN DEL PERÍODO:`, 14, startY);
@@ -884,8 +843,10 @@
             doc.setFontSize(10);
             doc.text(`Total Vendido (Bruto): $${totalVendido.toFixed(2)}`, 14, startY + 6);
             doc.text(`Ganancia Neta Estimada: $${gananciaTotal.toFixed(2)}`, 14, startY + 12);
+
             doc.save(`Reporte_Ventas_Suplefit_${fechaDesde}_al_${fechaHasta}.pdf`);
         }
     </script>
 </body>
 </html>
+
