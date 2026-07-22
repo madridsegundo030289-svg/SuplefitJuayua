@@ -17,54 +17,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-
-        /* --- CÓDIGO CSS PARA RESPONSIVIDAD --- */
-
-/* Contenedor deslizante para tablas en móviles */
-.table-responsive {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin-top: 15px;
-    border-radius: 4px;
-}
-
-table {
-    min-width: 600px;
-}
-
-/* Ajustes automáticos para pantallas menores a 768px (Móviles y Tablets) */
-/* 1. Asegura que los botones fluyan y se envuelvan correctamente */
-.navbar-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    justify-content: center;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* 2. Ajuste exacto para pantallas de celular */
-@media (max-width: 768px) {
-    .navbar {
-        padding: 8px;
-    }
-    
-    .navbar button {
-        flex: 1 1 43%; /* Distribuye dos botones por cada fila de forma equitativa */
-        box-sizing: border-box; /* Evita que el padding rompa el ancho del 43% */
-        padding: 10px 5px;
-        font-size: 12px;
-        text-align: center;
-    }
-    
-    .btn-logout-nav {
-        flex: 1 1 100% !important; /* El botón de salir ocupa toda la línea inferior por completo */
-        margin-top: 4px;
-    }
-}
-
-        
+              
         /* --- ESTILOS GENERALES --- */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
