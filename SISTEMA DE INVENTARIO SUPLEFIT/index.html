@@ -34,40 +34,35 @@ table {
 }
 
 /* Ajustes automáticos para pantallas menores a 768px (Móviles y Tablets) */
+/* 1. Asegura que los botones fluyan y se envuelvan correctamente */
+.navbar-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 2. Ajuste exacto para pantallas de celular */
 @media (max-width: 768px) {
     .navbar {
-        padding: 10px;
-    }
-    
-    .navbar-buttons {
-        justify-content: center;
+        padding: 8px;
     }
     
     .navbar button {
-        flex: 1 1 45%; /* Los botones del menú ocupan la mitad de la fila */
-        padding: 10px;
-        font-size: 13px;
+        flex: 1 1 43%; /* Distribuye dos botones por cada fila de forma equitativa */
+        box-sizing: border-box; /* Evita que el padding rompa el ancho del 43% */
+        padding: 10px 5px;
+        font-size: 12px;
+        text-align: center;
     }
     
     .btn-logout-nav {
-        flex: 1 1 100%; /* El botón de salir abarca toda la línea inferior */
-        margin-top: 5px;
-    }
-    
-    .vista {
-        padding: 15px 10px;
-    }
-    
-    .modulo {
-        padding: 15px;
-    }
-    
-    .flex-inputs {
-        flex-direction: column; /* Apila los inputs que estaban lado a lado */
-        gap: 0;
+        flex: 1 1 100% !important; /* El botón de salir ocupa toda la línea inferior por completo */
+        margin-top: 4px;
     }
 }
-
 
         
         /* --- ESTILOS GENERALES --- */
