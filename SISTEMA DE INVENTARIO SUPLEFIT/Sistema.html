@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suplefit Juayúa - Sistema en la Nube</title>
+    
+    <!-- Librerías para generar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- SDK de Firebase en la nube (Compat v10) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        h2, h3 { color: #2c3e50; }
+        h3 { border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 0; }
+        
+        /* --- LOGIN --- */
+        .login-container {
+            max-width: 400px;
+            margin: 60px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        /* --- NAVEGACIÓN --- */
+        .navbar {
+            display: none; 
+            background-color: #2c3e50;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar button {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 16px 18px;
+            text-decoration: none;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .navbar button:hover { background-color: #34495e; }
+        .navbar button.active { background-color: #2980b9; color: white; }
+        .navbar .btn-logout-nav { float: right; background-color: #c0392b; color: white; }
+        .navbar .btn-logout-nav:hover { background-color: #e74c3c; }
+
+        /* --- VISTAS Y MÓDULOS --- */
+        .vista {
+            display: none; 
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s;
+        }
+        .vista.activa { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .modulo {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        input, select {
+            width: 100%; padding: 10px; margin-bottom: 12px;
+            border: 1px solid #ccc; border-radius: 4px;
+            box-sizing: border-box; font-size: 14px;
+        }
+        
+        /* --- BOTONES --- */
+        .btn-accion { width: 100%; padding: 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-verde { background-color: #27ae60; } .btn-verde:hover { background-color: #2ecc71; }
+        .btn-azul { background-color: #2980b9; } .btn-azul:hover { background-color: #3498db; }
+        .btn-rojo-claro { background-color: #e74c3c; color: white; } .btn-rojo-claro:hover { background-color: #c0392b; }
+        
+        .btn-icono {
+            padding: 8px; width: 40px; height: 40px; color: white; border: none; 
+            border-radius: 4px; cursor: pointer; font-size: 16px; margin: 2px;
+        }
+        .btn-amarillo { background-color: #f39c12; }
+        .btn-rojo { background-color: #c0392b; }
+        .btn-info { background-color: #8e44ad; }
+        .btn-gris { background-color: #7f8c8d; }
+        
+        /* --- TABLAS --- */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #34495e; color: white; }
+        
+        .estado-debe { background-color: #e74c3c; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .estado-pagado { background-color: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .etiqueta-tipo { background-color: #7f8c8d; color: white; padding: 3px 6px; border-radius: 3px; font-size: 12px; }
+        .buscador { border: 2px solid #3498db; background-color: #f0f8ff; font-size: 16px; padding: 12px;}
+
+        /* --- TARJETAS --- */
+        .grid-reportes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .tarjeta {
+            background: #f8f9fa;
+            border-left: 5px solid #2980b9;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .tarjeta h4 { margin: 0 0 10px 0; color: #7f8c8d; font-size: 14px; text-transform: uppercase;}
+        .tarjeta .valor { font-size: 24px; font-weight: bold; color: #2c3e50; margin: 0;}
+        .valor.positivo { color: #2980b9; } 
+        .valor.pendiente { color: #e74c3c; }
+
+        .barra-filtros { display: flex; gap: 15px; margin-bottom: 15px; }
+        .barra-filtros input, .barra-filtros select { margin-bottom: 0; }
+    </style>
+</head>
+<body>
+
+    <!-- Imagen oculta para renderizar en PDF -->
+    <img id="logoImgPDF" src="logo.png" style="position: absolute; left: -9999px;" alt="Logo PDF">
+
+    <!-- LOGIN -->
+    <div id="pantallaLogin" class="login-container">
+        <h2>🔑 Acceso al Sistema</h2>
+        <p style="color: #7f8c8d; font-size: 13px;">Usuario: admin | Clave: 123</p>
+        <input type="text" id="usuario" placeholder="Usuario">
+        <input type="password" id="clave" placeholder="Contraseña">
+        <button class="btn-accion btn-azul" onclick="iniciarSesion()">Ingresar</button>
+    </div>
+
+    <!-- MENÚ DE NAVEGACIÓN -->
+    <div id="barraNavegacion" class="navbar">
+        <button class="nav-btn" onclick="cambiarPagina('paginaInicio', this)">🏠 Inicio</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaInventario', this)">📦 Inventario</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaVentas', this)">🛒 Ventas</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaCobros', this)">💰 Cobros y Clientes</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaEstadoCuenta', this)">📈 Estado de Cuenta</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaReportes', this)">📊 Reportes</button>
+        <button class="btn-logout-nav" onclick="cerrarSesion()">Cerrar Sesión</button>
+    </div>
+
+    <!-- PÁGINA 0: INICIO -->
+    <div id="paginaInicio" class="vista">
+        <div class="modulo" style="text-align: center;">
+            <img src="logo (2).png" alt="Suplefit Logo Dashboard" style="width: 100%; max-width: 500px; margin-top: 20px;">
+            <h1 style="color: #2c3e50; margin-top: 15px;">Bienvenido a Suplefit Juayúa</h1>
+            <p style="font-size: 18px; color: #7f8c8d; padding-bottom: 20px;">Sistema sincronizado en la nube en tiempo real.</p>
+        </div>
+    </div>
+
+    <!-- PÁGINA 1: INVENTARIO -->
+    <div id="paginaInventario" class="vista">
+        <div class="modulo">
+            <h3 id="tituloInventario">📦 Registro y Control de Inventario</h3>
+            
+            <label>Fecha de Ingreso:</label>
+            <input type="date" id="prodFechaIngreso">
+            <input type="text" id="prodNombre" placeholder="Nombre del Producto (ej. Proteína Whey)">
+            
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="prodPrecioCompra" placeholder="Precio Compra ($)">
+                <input type="number" id="prodPrecioVenta" placeholder="Precio Venta ($)">
+            </div>
+            
+            <input type="number" id="prodCantidad" placeholder="Cantidad Inicial en Stock">
+            
+            <button id="btnGuardarProd" class="btn-accion btn-azul" onclick="guardarProducto()">Guardar Nuevo Producto</button>
+            <button id="btnCancelarEdicion" class="btn-accion btn-gris" style="display:none; margin-top:10px;" onclick="cancelarEdicion()">Cancelar Edición</button>
+
+            <table id="tablaProductos">
+                <thead>
+                    <tr>
+                        <th>Fecha Ingreso</th>
+                        <th>Producto</th>
+                        <th>Costo</th>
+                        <th>Venta</th>
+                        <th>Ganancia</th>
+                        <th>Stock Actual</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoProductos"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PÁGINA 2: VENTAS -->
+    <div id="paginaVentas" class="vista">
+        <div class="modulo" style="max-width: 600px; margin: 0 auto;">
+            <h3>🛒 Procesar Nueva Venta</h3>
+            
+            <label>Fecha de Venta:</label>
+            <input type="date" id="ventaFecha">
+
+            <label>Nombre del Cliente (Obligatorio):</label>
+            <input type="text" id="clienteNombre" placeholder="Ingrese el nombre del cliente">
+
+            <label>Seleccionar Producto:</label>
+            <select id="ventaSeleccion"></select>
+            
+            <label>Cantidad:</label>
+            <input type="number" id="ventaCantidad" placeholder="Cantidad a vender" min="1">
+            
+            <label>Tipo de Pago:</label>
+            <select id="ventaTipo" onchange="alternarCamposCredito()">
+                <option value="contado">Un solo pago (Al Contado)</option>
+                <option value="credito">Dejar a Crédito (Pendiente)</option>
+            </select>
+
+            <div id="camposCredito" style="display: none; background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 10px; border: 1px solid #ddd;">
+                <label>Datos del Crédito:</label>
+                <input type="number" id="abonoInicial" placeholder="Abono Inicial (Dejar en blanco si es 0)">
+            </div>
+
+            <button class="btn-accion btn-azul" onclick="procesarVenta()">Completar Venta</button>
+        </div>
+    </div>
+
+    <!-- PÁGINA 3: COBROS -->
+    <div id="paginaCobros" class="vista">
+        <div class="modulo">
+            <h3>💰 Gestión de Clientes y Cobros</h3>
+            
+            <div class="barra-filtros">
+                <input type="text" id="buscarCliente" class="buscador" style="flex: 2;" placeholder="🔍 Buscar cliente por nombre..." onkeyup="renderizarDeudas()">
+                <select id="filtroEstadoCobros" style="flex: 1; border: 2px solid #3498db; font-size: 16px; padding: 12px; border-radius: 4px;" onchange="renderizarDeudas()">
+                    <option value="todos">Todos los Estados</option>
+                    <option value="deben">Solo los que Deben</option>
+                    <option value="pagados">Solo Pagados</option>
+                </select>
+            </div>
+            
+            <table id="tablaDeudas">
+                <thead>
+                    <tr>
+                        <th>Fecha Compra</th>
+                        <th>Cliente</th>
+                        <th>Concepto</th>
+                        <th>Total ($)</th>
+                        <th>Saldo ($)</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th style="width: 150px; text-align: center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoDeudas"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PÁGINA 4: ESTADO DE CUENTA -->
+    <div id="paginaEstadoCuenta" class="vista">
+        <div class="modulo">
+            <h3>📈 Estado de Cuenta del Negocio (Global)</h3>
+            <div class="grid-reportes">
+                <div class="tarjeta">
+                    <h4>Capital en Inventario</h4>
+                    <p class="valor" id="repCapital">$0.00</p>
+                </div>
+                <div class="tarjeta" style="border-left-color: #8e44ad;">
+                    <h4>Ganancias Globales Estimadas</h4>
+                    <p class="valor positivo" id="repGananciaGlobal">$0.00</p>
+                </div>
+                <div class="tarjeta" style="border-left-color: #e74c3c;">
+                    <h4>Total Cuentas por Cobrar</h4>
+                    <p class="valor pendiente" id="repPorCobrar">$0.00</p>
+                </div>
+            </div>
+
+            <h4 style="margin-top: 25px; color:#2c3e50;">📋 Detalle de Clientes que Deben</h4>
+            <table id="tablaDetalleDeudores" style="margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th>Fecha de Compra</th>
+                        <th>Nombre del Cliente</th>
+                        <th>Producto / Concepto</th>
+                        <th>Monto que Debe ($)</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoDetalleDeudores"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PÁGINA 5: REPORTES -->
+    <div id="paginaReportes" class="vista">
+        <div class="modulo">
+            <h3>📅 Reporte de Ventas por Período</h3>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                <label>Desde:</label>
+                <input type="date" id="fechaDesde" style="width: auto; margin-bottom: 0;">
+                <label>Hasta:</label>
+                <input type="date" id="fechaHasta" style="width: auto; margin-bottom: 0;">
+                
+                <button class="btn-azul" style="padding: 10px; width: auto; border:none; border-radius:4px; color:white; cursor:pointer;" onclick="renderizarDatosGenerales()">🔍 Filtrar Fechas</button>
+                <button class="btn-rojo-claro" style="padding: 10px; width: auto; border:none; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="descargarPDFReporte()">📄 Descargar PDF</button>
+            </div>
+
+            <div class="grid-reportes">
+                <div class="tarjeta" style="border-left-color: #3498db;">
+                    <h4>Total Vendido (Rango)</h4>
+                    <p class="valor" id="repVentasMes">$0.00</p>
+                </div>
+                <div class="tarjeta" style="border-left-color: #8e44ad;">
+                    <h4>Ganancia Neta (Rango)</h4>
+                    <p class="valor positivo" id="repGananciaMes">$0.00</p>
+                </div>
+            </div>
+
+            <table id="tablaVentasMes">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Total Venta</th>
+                        <th>Ganancia</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoVentasMes"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // --- CONEXIÓN A FIREBASE EN LA NUBE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9GsVx6TEB2pErquC_wx5Jler1cafK_Ik",
+            authDomain: "suplefit-app.firebaseapp.com",
+            projectId: "suplefit-app",
+            storageBucket: "suplefit-app.firebasestorage.app",
+            messagingSenderId: "169438827759",
+            appId: "1:169438827759:web:6139f03edb8eecda25371a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Variables de Estado
+        let inventario = [];
+        let deudas = [];
+        let ventas = [];
+        let idEdicion = null;
+
+        // Configurar fechas iniciales
+        let hoy = new Date();
+        document.getElementById('ventaFecha').valueAsDate = hoy;
+        document.getElementById('prodFechaIngreso').valueAsDate = hoy; 
+        
+        let primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+        let diaActual = hoy.toISOString().split('T')[0];
+        document.getElementById('fechaDesde').value = primerDiaMes;
+        document.getElementById('fechaHasta').value = diaActual;
+
+        // --- ESCUCHADORES EN TIEMPO REAL (FIREBASE) ---
+        db.collection("inventario").onSnapshot(snapshot => {
+            inventario = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderizarTodo();
+        });
+
+        db.collection("deudas").onSnapshot(snapshot => {
+            deudas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderizarTodo();
+        });
+
+        db.collection("ventas").onSnapshot(snapshot => {
+            ventas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderizarTodo();
+        });
+
+        // --- NAVEGACIÓN ---
+        function cambiarPagina(idPagina, elementoBoton) {
+            document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(idPagina).classList.add('activa');
+            elementoBoton.classList.add('active');
+            
+            if(idPagina === 'paginaReportes' || idPagina === 'paginaEstadoCuenta') {
+                renderizarDatosGenerales();
+            }
+        }
+
+        function iniciarSesion() {
+            if (document.getElementById('usuario').value === "admin" && document.getElementById('clave').value === "123") {
+                document.getElementById('pantallaLogin').style.display = 'none';
+                document.getElementById('barraNavegacion').style.display = 'block';
+                document.getElementById('paginaInicio').classList.add('activa');
+                document.querySelectorAll('.nav-btn')[0].classList.add('active');
+                renderizarTodo();
+            } else { alert("Datos incorrectos. Intente de nuevo."); }
+        }
+
+        function cerrarSesion() { location.reload(); }
+
+        // --- INVENTARIO (FIREBASE) ---
+        async function guardarProducto() {
+            const fechaIngreso = document.getElementById('prodFechaIngreso').value;
+            const nombre = document.getElementById('prodNombre').value;
+            const compra = parseFloat(document.getElementById('prodPrecioCompra').value);
+            const venta = parseFloat(document.getElementById('prodPrecioVenta').value);
+            const cantidad = parseInt(document.getElementById('prodCantidad').value);
+            
+            if (nombre && fechaIngreso && !isNaN(compra) && !isNaN(venta) && !isNaN(cantidad)) {
+                const datosProducto = {
+                    fechaIngreso,
+                    nombre,
+                    compra: compra.toFixed(2),
+                    venta: venta.toFixed(2),
+                    cantidad
+                };
+
+                if(!idEdicion) {
+                    await db.collection("inventario").add(datosProducto);
+                } else {
+                    await db.collection("inventario").doc(idEdicion).update(datosProducto);
+                    cancelarEdicion();
+                }
+                limpiarCamposInventario();
+            } else { alert("Valores inválidos. Verifique los campos."); }
+        }
+
+        function editarProducto(id) {
+            idEdicion = id;
+            let prod = inventario.find(p => p.id === id);
+            if (!prod) return;
+
+            document.getElementById('prodFechaIngreso').value = prod.fechaIngreso || ''; 
+            document.getElementById('prodNombre').value = prod.nombre;
+            document.getElementById('prodPrecioCompra').value = prod.compra;
+            document.getElementById('prodPrecioVenta').value = prod.venta;
+            document.getElementById('prodCantidad').value = prod.cantidad;
+            document.getElementById('tituloInventario').innerText = "✏️ Editando Producto";
+            document.getElementById('btnGuardarProd').innerText = "Guardar Cambios";
+            document.getElementById('btnCancelarEdicion').style.display = 'block';
+            window.scrollTo(0, 0); 
+        }
+
+        async function eliminarProducto(id) {
+            let prod = inventario.find(p => p.id === id);
+            if(prod && confirm(`¿Eliminar "${prod.nombre}"?`)) {
+                await db.collection("inventario").doc(id).delete();
+                if(idEdicion === id) cancelarEdicion(); 
+            }
+        }
+
+        function cancelarEdicion() {
+            idEdicion = null;
+            limpiarCamposInventario();
+            document.getElementById('tituloInventario').innerText = "📦 Registro y Control de Inventario";
+            document.getElementById('btnGuardarProd').innerText = "Guardar Nuevo Producto";
+            document.getElementById('btnCancelarEdicion').style.display = 'none';
+        }
+
+        function limpiarCamposInventario() {
+            document.getElementById('prodFechaIngreso').valueAsDate = new Date(); 
+            document.getElementById('prodNombre').value = '';
+            document.getElementById('prodPrecioCompra').value = '';
+            document.getElementById('prodPrecioVenta').value = '';
+            document.getElementById('prodCantidad').value = '';
+        }
+
+        // --- VENTAS (FIREBASE) ---
+        function alternarCamposCredito() {
+            document.getElementById('camposCredito').style.display = document.getElementById('ventaTipo').value === 'credito' ? 'block' : 'none';
+        }
+
+        async function procesarVenta() {
+            const fechaVenta = document.getElementById('ventaFecha').value;
+            const cliente = document.getElementById('clienteNombre').value.trim();
+            const idProd = document.getElementById('ventaSeleccion').value;
+            const cantidadVenta = parseInt(document.getElementById('ventaCantidad').value);
+            const tipoPago = document.getElementById('ventaTipo').value;
+
+            if (!fechaVenta) return alert("Seleccione la fecha de venta.");
+            if (!cliente) return alert("Debe ingresar el nombre del cliente.");
+            if (!idProd || isNaN(cantidadVenta) || cantidadVenta <= 0) return alert("Seleccione un producto y cantidad válida.");
+            
+            const producto = inventario.find(p => p.id === idProd);
+            if (!producto || producto.cantidad < cantidadVenta) return alert(`Stock insuficiente.`);
+
+            const totalVenta = producto.venta * cantidadVenta;
+            const gananciaVenta = (producto.venta - producto.compra) * cantidadVenta;
+            
+            // Actualizar Stock en la Nube
+            const nuevaCantidad = producto.cantidad - cantidadVenta;
+            await db.collection("inventario").doc(idProd).update({ cantidad: nuevaCantidad });
+
+            // Registrar Venta en la Nube
+            await db.collection("ventas").add({
+                fecha: fechaVenta,
+                cliente: cliente,
+                producto: producto.nombre,
+                cantidad: cantidadVenta,
+                total: totalVenta.toFixed(2),
+                ganancia: gananciaVenta.toFixed(2),
+                tipo: tipoPago
+            });
+
+            let abono = 0;
+            let saldo = 0;
+            let historial = [];
+
+            if (tipoPago === 'contado') {
+                abono = totalVenta;
+                saldo = 0;
+                historial.push({ fecha: fechaVenta, monto: abono.toFixed(2), detalle: "Pago al Contado" });
+            } else if (tipoPago === 'credito') {
+                abono = parseFloat(document.getElementById('abonoInicial').value);
+                if (isNaN(abono)) abono = 0;
+                saldo = totalVenta - abono;
+                if(abono > 0) {
+                    historial.push({ fecha: fechaVenta, monto: abono.toFixed(2), detalle: "Abono Inicial" });
+                }
+            }
+
+            // Registrar Deuda/Cobro en la Nube
+            await db.collection("deudas").add({
+                fecha: fechaVenta,
+                nombre: cliente,
+                concepto: `${cantidadVenta}x ${producto.nombre}`,
+                total: totalVenta.toFixed(2),
+                abonado: abono.toFixed(2),
+                saldo: saldo.toFixed(2),
+                tipo: tipoPago,
+                historialAbonos: historial 
+            });
+
+            document.getElementById('ventaCantidad').value = '';
+            document.getElementById('clienteNombre').value = '';
+            document.getElementById('abonoInicial').value = '';
+            document.getElementById('ventaTipo').value = 'contado';
+            alternarCamposCredito();
+
+            let mensajeExito = `Venta guardada con éxito en la nube. Total: $${totalVenta.toFixed(2)}`;
+            if (nuevaCantidad === 0) {
+                mensajeExito += `\n\n⚠️ ADVERTENCIA: "${producto.nombre}" se ha quedado sin existencias.`;
+            }
+            alert(mensajeExito);
+        }
+
+        // --- COBROS Y ABONOS (FIREBASE) ---
+        async function registrarAbono(id) {
+            let deuda = deudas.find(d => d.id === id);
+            if (!deuda || parseFloat(deuda.saldo) <= 0) return alert("Esta cuenta ya está saldada.");
+
+            let fechaHoy = new Date().toISOString().split('T')[0];
+            let fechaAbono = prompt(`FECHA del abono (AAAA-MM-DD):`, fechaHoy);
+            if(!fechaAbono) return; 
+
+            let abonoInput = prompt(`¿Cuánto abonará ${deuda.nombre}? (Saldo Pendiente: $${deuda.saldo})`);
+            if (abonoInput !== null && abonoInput !== "") {
+                let montoAbono = parseFloat(abonoInput);
+                if (!isNaN(montoAbono) && montoAbono > 0) {
+                    if(montoAbono > deuda.saldo) montoAbono = parseFloat(deuda.saldo);
+                    let nuevoAbonado = (parseFloat(deuda.abonado) + montoAbono).toFixed(2);
+                    let nuevoSaldo = (parseFloat(deuda.total) - parseFloat(nuevoAbonado)).toFixed(2);
+                    
+                    let historial = deuda.historialAbonos || [];
+                    historial.push({ fecha: fechaAbono, monto: montoAbono.toFixed(2), detalle: "Abono" });
+                    
+                    await db.collection("deudas").doc(id).update({
+                        abonado: nuevoAbonado,
+                        saldo: nuevoSaldo,
+                        historialAbonos: historial
+                    });
+                } else { alert("Monto inválido."); }
+            }
+        }
+
+        function verHistorial(id) {
+            let deuda = deudas.find(d => d.id === id);
+            if (!deuda) return;
+            let historial = deuda.historialAbonos || [];
+            if(historial.length === 0) return alert(`No hay registro de pagos para ${deuda.nombre}.`);
+
+            let texto = `Historial de pagos de ${deuda.nombre}:\n\n`;
+            historial.forEach(pago => { texto += `📅 ${pago.fecha} | Pagó: $${pago.monto} \n`; });
+            texto += `\nSaldo Pendiente: $${deuda.saldo}`;
+            alert(texto);
+        }
+
+        async function eliminarRegistroDeuda(id) {
+            if(confirm("¿Seguro que deseas eliminar este registro del historial?")) {
+                await db.collection("deudas").doc(id).delete();
+            }
+        }
+
+        // --- RENDERIZADO GENERAL ---
+        function renderizarTodo() {
+            const tbodyProd = document.getElementById('cuerpoProductos');
+            const selectVenta = document.getElementById('ventaSeleccion');
+            tbodyProd.innerHTML = ''; 
+            selectVenta.innerHTML = '<option value="">-- Seleccionar Producto --</option>';
+
+            inventario.forEach(prod => {
+                let ganancia = (parseFloat(prod.venta) - parseFloat(prod.compra)).toFixed(2);
+                let fechaDisplay = prod.fechaIngreso ? prod.fechaIngreso : "-"; 
+
+                tbodyProd.innerHTML += `<tr>
+                    <td>${fechaDisplay}</td>
+                    <td><strong>${prod.nombre}</strong></td>
+                    <td>$${prod.compra}</td>
+                    <td>$${prod.venta}</td>
+                    <td style="color:#2980b9; font-weight:bold;">$${ganancia}</td>
+                    <td><strong>${prod.cantidad}</strong></td>
+                    <td>
+                        <button class="btn-icono btn-amarillo" title="Editar" onclick="editarProducto('${prod.id}')">✏️</button>
+                        <button class="btn-icono btn-rojo" title="Borrar" onclick="eliminarProducto('${prod.id}')">🗑️</button>
+                    </td>
+                </tr>`;
+                
+                if (prod.cantidad > 0) selectVenta.innerHTML += `<option value="${prod.id}">${prod.nombre} - $${prod.venta}</option>`;
+            });
+
+            renderizarDeudas();
+            renderizarDatosGenerales();
+        }
+
+        function renderizarDeudas() {
+            const filtroTexto = document.getElementById('buscarCliente').value.toLowerCase();
+            const filtroEstado = document.getElementById('filtroEstadoCobros').value;
+            const tbodyDeudas = document.getElementById('cuerpoDeudas');
+            tbodyDeudas.innerHTML = '';
+
+            deudas.forEach(deuda => {
+                let estaPagado = parseFloat(deuda.saldo) <= 0;
+
+                let mostrarPorEstado = true;
+                if (filtroEstado === 'deben' && estaPagado) mostrarPorEstado = false;
+                if (filtroEstado === 'pagados' && !estaPagado) mostrarPorEstado = false;
+
+                if (deuda.nombre.toLowerCase().includes(filtroTexto) && mostrarPorEstado) {
+                    
+                    let etiquetaEstado = estaPagado ? `<span class="estado-pagado" style="background-color:#3498db;">Pagado</span>` : `<span class="estado-debe">Debe</span>`;
+                    let etiquetaTipo = deuda.tipo === 'credito' ? `<span class="etiqueta-tipo" style="background-color:#e67e22;">Crédito</span>` : `<span class="etiqueta-tipo" style="background-color:#2980b9;">Contado</span>`;
+                    
+                    let btnAbonar = estaPagado ? "" : `<button class="btn-icono btn-amarillo" title="Abonar" onclick="registrarAbono('${deuda.id}')">➕</button>`;
+                    let btnHistorial = `<button class="btn-icono btn-info" title="Ver Historial" onclick="verHistorial('${deuda.id}')">📅</button>`;
+                    let btnBorrar = `<button class="btn-icono btn-gris" title="Eliminar" onclick="eliminarRegistroDeuda('${deuda.id}')">🗑️</button>`;
+
+                    tbodyDeudas.innerHTML += `<tr>
+                        <td>${deuda.fecha || "-"}</td>
+                        <td><strong>${deuda.nombre}</strong></td>
+                        <td>${deuda.concepto}</td>
+                        <td>$${deuda.total}</td>
+                        <td style="color:#c0392b; font-weight:bold;">$${deuda.saldo}</td>
+                        <td>${etiquetaTipo}</td>
+                        <td>${etiquetaEstado}</td>
+                        <td style="text-align: center;">${btnAbonar}${btnHistorial}${btnBorrar}</td>
+                    </tr>`;
+                }
+            });
+        }
+
+        function renderizarDatosGenerales() {
+            let capitalInventario = inventario.reduce((sum, p) => sum + (parseFloat(p.compra) * p.cantidad), 0);
+            let totalCuentasPorCobrar = deudas.reduce((sum, d) => sum + parseFloat(d.saldo), 0);
+            let gananciaGlobalHistorica = ventas.reduce((sum, v) => sum + parseFloat(v.ganancia), 0);
+
+            document.getElementById('repCapital').innerText = `$${capitalInventario.toFixed(2)}`;
+            document.getElementById('repPorCobrar').innerText = `$${totalCuentasPorCobrar.toFixed(2)}`;
+            document.getElementById('repGananciaGlobal').innerText = `$${gananciaGlobalHistorica.toFixed(2)}`;
+
+            const tbodyDetalleDeudores = document.getElementById('cuerpoDetalleDeudores');
+            tbodyDetalleDeudores.innerHTML = '';
+            let deudoresPendientes = deudas.filter(d => parseFloat(d.saldo) > 0);
+            
+            if (deudoresPendientes.length === 0) {
+                tbodyDetalleDeudores.innerHTML = `<tr><td colspan="4" style="text-align:center;">¡Excelente! Nadie te debe dinero actualmente.</td></tr>`;
+            } else {
+                deudoresPendientes.forEach(d => {
+                    tbodyDetalleDeudores.innerHTML += `<tr>
+                        <td>${d.fecha}</td>
+                        <td><strong>${d.nombre}</strong></td>
+                        <td>${d.concepto}</td>
+                        <td style="color:#c0392b; font-weight:bold;">$${d.saldo}</td>
+                    </tr>`;
+                });
+            }
+
+            const fechaDesde = document.getElementById('fechaDesde').value;
+            const fechaHasta = document.getElementById('fechaHasta').value;
+            const tbodyVentasMes = document.getElementById('cuerpoVentasMes');
+            tbodyVentasMes.innerHTML = '';
+
+            let totalVentasMes = 0;
+            let gananciaNetaMes = 0;
+
+            ventas.forEach(v => {
+                if (v.fecha >= fechaDesde && v.fecha <= fechaHasta) {
+                    totalVentasMes += parseFloat(v.total);
+                    gananciaNetaMes += parseFloat(v.ganancia);
+
+                    let etiquetaTipo = v.tipo === 'credito' ? '🟠 Crédito' : '🔵 Contado';
+
+                    tbodyVentasMes.innerHTML += `<tr>
+                        <td>${v.fecha}</td>
+                        <td><strong>${v.cliente || "-"}</strong></td>
+                        <td>${v.producto}</td>
+                        <td>${v.cantidad}</td>
+                        <td>$${v.total}</td>
+                        <td style="color:#2980b9; font-weight:bold;">$${v.ganancia}</td>
+                        <td>${etiquetaTipo}</td>
+                    </tr>`;
+                }
+            });
+
+            if(tbodyVentasMes.innerHTML === '') {
+                tbodyVentasMes.innerHTML = `<tr><td colspan="7" style="text-align:center;">No hay ventas registradas en este rango de fechas.</td></tr>`;
+            }
+
+            document.getElementById('repVentasMes').innerText = `$${totalVentasMes.toFixed(2)}`;
+            document.getElementById('repGananciaMes').innerText = `$${gananciaNetaMes.toFixed(2)}`;
+        }
+
+        // --- GENERADOR DE PDF ---
+        function descargarPDFReporte() {
+            if (typeof window.jspdf === 'undefined') {
+                alert("Cargando módulo PDF, reintente en unos segundos.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const fechaDesde = document.getElementById('fechaDesde').value;
+            const fechaHasta = document.getElementById('fechaHasta').value;
+
+            const logoElement = document.getElementById('logoImgPDF');
+            if (logoElement && logoElement.complete && logoElement.naturalWidth !== 0) {
+                try {
+                    let canvas = document.createElement("canvas");
+                    canvas.width = logoElement.naturalWidth;
+                    canvas.height = logoElement.naturalHeight;
+                    let ctx = canvas.getContext("2d");
+                    ctx.drawImage(logoElement, 0, 0);
+                    let imgBase64 = canvas.toDataURL("image/png");
+
+                    doc.addImage(imgBase64, 'PNG', 14, 8, 25, 25);
+                } catch (e) {
+                    console.warn("Logo omitido por restricción local de origen.");
+                }
+            }
+
+            doc.setFontSize(18);
+            doc.setTextColor(44, 62, 80); 
+            doc.text("Suplefit Juayúa", 196, 20, { align: 'right' });
+            
+            doc.setFontSize(13);
+            doc.text("Reporte de Ventas", 14, 38);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(127, 140, 141);
+            doc.text(`Período consultado: ${fechaDesde} al ${fechaHasta}`, 14, 44);
+            doc.text(`Fecha de impresión: ${new Date().toLocaleDateString()}`, 14, 49);
+
+            let startY = 56;
+
+            let ventasFiltradas = ventas.filter(v => v.fecha >= fechaDesde && v.fecha <= fechaHasta);
+            let ventasContado = ventasFiltradas.filter(v => v.tipo === 'contado');
+            let ventasCredito = ventasFiltradas.filter(v => v.tipo === 'credito');
+
+            // TABLA 1: CONTADO
+            doc.setFontSize(12);
+            doc.setTextColor(41, 128, 185); 
+            doc.text("1. Ventas al Contado", 14, startY);
+            startY += 5;
+
+            let bodyContado = ventasContado.map(v => [
+                v.fecha, v.cliente || "-", v.producto, v.cantidad, `$${v.total}`, `$${v.ganancia}`
+            ]);
+
+            if (bodyContado.length === 0) bodyContado.push([{content: 'No hay ventas al contado en este período', colSpan: 6, styles: {halign: 'center'}}]);
+
+            doc.autoTable({
+                startY: startY,
+                head: [['Fecha', 'Cliente', 'Producto', 'Cant.', 'Total Venta', 'Ganancia']],
+                body: bodyContado,
+                theme: 'striped',
+                headStyles: { fillColor: [41, 128, 185] },
+                styles: { fontSize: 9, cellPadding: 2.5 }
+            });
+
+            startY = doc.lastAutoTable.finalY + 12;
+
+            // TABLA 2: CRÉDITO
+            doc.setFontSize(12);
+            doc.setTextColor(230, 126, 34); 
+            doc.text("2. Ventas al Crédito (Cuentas Pendientes)", 14, startY);
+            startY += 5;
+
+            let bodyCredito = ventasCredito.map(v => [
+                v.fecha, v.cliente || "-", v.producto, v.cantidad, `$${v.total}`, `$${v.ganancia}`
+            ]);
+
+            if (bodyCredito.length === 0) bodyCredito.push([{content: 'No hay ventas al crédito en este período', colSpan: 6, styles: {halign: 'center'}}]);
+
+            doc.autoTable({
+                startY: startY,
+                head: [['Fecha', 'Cliente', 'Producto', 'Cant.', 'Total Venta', 'Ganancia']],
+                body: bodyCredito,
+                theme: 'striped',
+                headStyles: { fillColor: [230, 126, 34] },
+                styles: { fontSize: 9, cellPadding: 2.5 }
+            });
+
+            startY = doc.lastAutoTable.finalY + 15;
+            
+            let totalVendido = ventasFiltradas.reduce((sum, v) => sum + parseFloat(v.total), 0);
+            let gananciaTotal = ventasFiltradas.reduce((sum, v) => sum + parseFloat(v.ganancia), 0);
+
+            doc.setFontSize(11);
+            doc.setTextColor(44, 62, 80);
+            doc.text(`RESUMEN DEL PERÍODO:`, 14, startY);
+            
+            doc.setFontSize(10);
+            doc.text(`Total Vendido (Bruto): $${totalVendido.toFixed(2)}`, 14, startY + 6);
+            doc.text(`Ganancia Neta Estimada: $${gananciaTotal.toFixed(2)}`, 14, startY + 12);
+
+            doc.save(`Reporte_Ventas_Suplefit_${fechaDesde}_al_${fechaHasta}.pdf`);
+        }
+    </script>
+</body>
+</html>
