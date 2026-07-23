@@ -157,17 +157,65 @@
 
     <!-- MENÚ DE NAVEGACIÓN -->
 
+<!-- MENÚ DESPLEGABLE / HAMBURGUESA -->
+<div id="barraNavegacion" style="display: none; background-color: #2c3e50; position: sticky; top: 0; z-index: 1000; width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+    
+    <!-- Barra superior visible en celulares con el botón de menú -->
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; box-sizing: border-box;">
+        <span style="color: white; font-weight: bold; font-size: 15px;">Suplefit Juayúa</span>
+        <button onclick="toggleMenuMovil()" id="btnMenuToggle" style="background: #34495e; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer;">
+            ☰ Menú
+        </button>
+    </div>
+    
+    <!-- Contenedor agrupado de botones -->
+    <div id="menuLinks" style="display: none; flex-direction: column; background: #34495e; padding: 10px; gap: 6px; box-sizing: border-box; border-top: 1px solid #3e5871;">
+        <button class="nav-btn" onclick="cambiarPagina('paginaInicio', this); toggleMenuMovil();" style="padding: 10px 12px; background: #2c3e50; color: white; border: none; border-radius: 4px; text-align: left; font-weight: bold; cursor: pointer; font-size: 14px;">🏠 Inicio</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaInventario', this); toggleMenuMovil();" style="padding: 10px 12px; background: #2c3e50; color: white; border: none; border-radius: 4px; text-align: left; font-weight: bold; cursor: pointer; font-size: 14px;">📦 Inventario</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaVentas', this); toggleMenuMovil();" style="padding: 10px 12px; background: #2c3e50; color: white; border: none; border-radius: 4px; text-align: left; font-weight: bold; cursor: pointer; font-size: 14px;">🛒 Ventas</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaCobros', this); toggleMenuMovil();" style="padding: 10px 12px; background: #2c3e50; color: white; border: none; border-radius: 4px; text-align: left; font-weight: bold; cursor: pointer; font-size: 14px;">💰 Cobros</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaEstadoCuenta', this); toggleMenuMovil();" style="padding: 10px 12px; background: #2c3e50; color: white; border: none; border-radius: 4px; text-align: left; font-weight: bold; cursor: pointer; font-size: 14px;">📈 Estado</button>
+        <button class="nav-btn" onclick="cambiarPagina('paginaReportes', this); toggleMenuMovil();" style="padding: 10px 12px; background: #2c3e50; color: white; border: none; border-radius: 4px; text-align: left; font-weight: bold; cursor: pointer; font-size: 14px;">📊 Reportes</button>
+        <button onclick="cerrarSesion()" style="padding: 10px 12px; background: #c0392b; color: white; border: none; border-radius: 4px; text-align: left; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 4px;">🚪 Salir</button>
+    </div>
+</div>
 
-    </div>
-    <div id="barraNavegacion" class="navbar">
-        <button class="nav-btn" onclick="cambiarPagina('paginaInicio', this)">🏠 Inicio</button>
-        <button class="nav-btn" onclick="cambiarPagina('paginaInventario', this)">📦 Inventario</button>
-        <button class="nav-btn" onclick="cambiarPagina('paginaVentas', this)">🛒 Ventas</button>
-        <button class="nav-btn" onclick="cambiarPagina('paginaCobros', this)">💰 Cobros y Clientes</button>
-        <button class="nav-btn" onclick="cambiarPagina('paginaEstadoCuenta', this)">📈 Estado de Cuenta</button>
-        <button class="nav-btn" onclick="cambiarPagina('paginaReportes', this)">📊 Reportes</button>
-        <button class="btn-logout-nav" onclick="cerrarSesion()">Cerrar Sesión</button>
-    </div>
+<script>
+// Función para abrir y cerrar el menú en celulares
+function toggleMenuMovil() {
+    const menu = document.getElementById('menuLinks');
+    if (window.innerWidth <= 768) {
+        if (menu.style.display === 'flex') {
+            menu.style.display = 'none';
+        } else {
+            menu.style.display = 'flex';
+        }
+    }
+}
+</script>
+
+<style>
+/* En computadoras y pantallas grandes, el menú se muestra de forma horizontal automáticamente y oculta el botón de hamburguesa */
+@media (min-width: 769px) {
+    #btnMenuToggle {
+        display: none !important;
+    }
+    #menuLinks {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        background: transparent !important;
+        padding: 5px 10px 10px 10px !important;
+        border-top: none !important;
+    }
+    #menuLinks button {
+        text-align: center !important;
+        flex: 0 1 auto !important;
+        min-width: 110px;
+    }
+}
+</style>
 
     <!-- PÁGINA 0: INICIO -->
     <div id="paginaInicio" class="vista">
